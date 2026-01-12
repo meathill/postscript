@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postscript - Secure Legacy Platform</title>
+    
+    <!-- React & Router -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#B08D55", 
+                        "primary-dark": "#8F7244",
+                        "primary-light": "#F2EBD9", 
+                        "background-page": "#FDFBF7", 
+                        "surface-card": "#FFFFFF",
+                        "surface-subtle": "#F7F5F0",
+                        "text-main": "#3E3630", 
+                        "text-muted": "#8A8178", 
+                        "border-subtle": "#EBE6DE",
+                        "accent-terracotta": "#D27D66", 
+                        "accent-terracotta-bg": "#FAF2F0",
+                        "accent-sage": "#8FA994", 
+                        "accent-sage-bg": "#F0F5F1",
+                        
+                        // Legacy colors from various screens mapped to unified theme roughly
+                        "cream-bg": "#FAF7F2",
+                        "card-white": "#FFFFFF",
+                        "gold-trim": "#C5A065",
+                        "gold-trim-dark": "#A88349",
+                        "text-primary": "#4A3B32",
+                        "text-secondary": "#8C7B70",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"],
+                        "serif": ["Playfair Display", "serif"],
+                        "serif-text": ["Newsreader", "serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 30px -4px rgba(197, 160, 101, 0.15)',
+                        'card': '0 2px 12px -2px rgba(74, 59, 50, 0.08)',
+                        'envelope': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                        'glow': "0 0 15px rgba(176, 141, 85, 0.2)",
+                    },
+                    backgroundImage: {
+                         'parchment-texture': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMDAlJyBoZWlnaHQ9JzEwMCUnIGZpbHRlcj0ndXJsKCNub2lzZSknPjxmaWx0ZXIgaWQ9J25vaXNlJz48ZmVUdXJidWxlbmNlIHR5cGU9J2ZyYWN0YWxOb2lzZScgYmFzZUZyZXF1ZW5jeT0nMC41JyBudW1PY3RhdmVzPScxJyBzdGl0Y2hUaWxlcz0nc3RpdGNoJyAvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPScxMDAlJyBoZWlnaHQ9JzEwMCUnIG9wYWNpdHk9JzAuMDUnLz48L3N2Zz4=')",
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            min-height: 100vh;
+            background-color: #FDFBF7; /* Fallback */
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #B08D55;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #B08D55;
+        }
+        .toggle-checkbox:checked + .toggle-label:before {
+            transform: translateX(100%);
+        }
+        .lined-paper {
+            background-image: linear-gradient(transparent 96%, #EBE6DE 96%);
+            background-size: 100% 2.5rem;
+            line-height: 2.5rem;
+            background-attachment: local;
+        }
+        /* Override for global consistency */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // --- Shared Components ---
+
+        const NavButton = ({ to, icon, label, filled = false }) => {
+            const location = useLocation();
+            const isActive = location.pathname === to;
+            const finalColorClass = isActive ? "text-primary" : "text-text-muted hover:text-text-main";
+
+            return (
+                <Link to={to} className={`flex flex-col items-center gap-1.5 w-full ${finalColorClass} transition-colors group relative`}>
+                    {isActive && <span className="absolute -top-3 left-1/2 -translate-x-1/2 w-10 h-1 bg-primary rounded-b-lg shadow-glow"></span>}
+                    <span className={`material-symbols-outlined ${filled || isActive ? 'filled' : ''}`}>{icon}</span>
+                    <span className="text-[10px] font-medium tracking-wide">{label}</span>
+                </Link>
+            );
+        };
+
+        const BottomNav = () => (
+            <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-border-subtle pb-safe shadow-[0_-5px_20px_rgba(0,0,0,0.02)]">
+                <div className="flex justify-around items-center h-20">
+                    <NavButton to="/dashboard" icon="dashboard" label="Home" filled={true} />
+                    <NavButton to="/security" icon="shield" label="Security" />
+                    <NavButton to="/recipients" icon="family_star" label="Heirs" />
+                    <NavButton to="/billing" icon="settings" label="Settings" />
+                </div>
+            </nav>
+        );
+
+        const BackHeader = ({ title, onBack, rightAction }) => {
+            const navigate = useNavigate();
+            return (
+                <div className="sticky top-0 z-50 bg-background-page/95 backdrop-blur-md border-b border-border-subtle transition-all duration-300">
+                    <div className="flex items-center justify-between px-4 py-4 relative">
+                        <button 
+                            onClick={onBack || (() => navigate(-1))}
+                            className="flex items-center justify-center size-10 rounded-full text-text-main hover:bg-surface-subtle transition-colors -ml-2"
+                        >
+                            <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                        </button>
+                        <h2 className="text-text-main text-lg font-serif font-bold tracking-tight absolute left-1/2 -translate-x-1/2 truncate max-w-[60%]">
+                            {title}
+                        </h2>
+                        <div className="min-w-[40px] flex justify-end">
+                            {rightAction}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Screens ---
+
+        // Screen 1: Recipients
+        const RecipientsScreen = () => {
+            return (
+                <div className="bg-cream-bg font-display text-text-primary min-h-screen pb-24">
+                     <div className="sticky top-0 z-10 flex flex-col gap-2 bg-cream-bg/95 backdrop-blur-md p-4 pb-2 border-b border-gold-trim/10">
+                        <div className="flex items-center h-12 justify-between">
+                            <Link to="/dashboard" className="text-text-primary flex size-12 shrink-0 items-center justify-start hover:text-terracotta transition-colors">
+                                <span className="material-symbols-outlined" style={{fontSize: '24px'}}>arrow_back_ios</span>
+                            </Link>
+                            <div className="flex w-16 items-center justify-end">
+                                <button className="text-terracotta-dark text-base font-bold leading-normal tracking-[0.015em] shrink-0 hover:text-terracotta transition-colors">Edit</button>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-text-primary tracking-tight text-[28px] font-bold leading-tight">Postscript Recipients</p>
+                                <p className="text-text-secondary text-sm font-medium mt-0.5">Manage your legacy circle</p>
+                            </div>
+                            <div className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-full border border-gold-trim/20 shadow-sm">
+                                <span className="material-symbols-outlined text-status-verified" style={{fontSize: '16px'}}>shield_lock</span>
+                                <span className="text-xs font-semibold text-text-secondary">Secure</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="flex-1 p-4">
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            {/* Sarah */}
+                            <Link to="/compose" className="group relative flex flex-col gap-3 rounded-lg bg-card-white p-4 shadow-card active:scale-[0.98] transition-all duration-200 cursor-pointer hover:shadow-soft border border-gold-trim/10 overflow-hidden">
+                                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gold-trim/60 via-gold-trim to-gold-trim/60"></div>
+                                <div className="flex justify-between items-start mt-1">
+                                    <div className="relative">
+                                        <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-12 shrink-0 border-2 border-white ring-1 ring-gold-trim/30 shadow-sm" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCOl8D1k56RPO9aNogaEwB0Mb3mViCX0CdtOAzvLA_GQSwtrkL9YbKEJZrdJ7P195NayX2EEYPGKcBd28wSj78x2IXYebdpfdA-bd_KXfu81vMC0FSAk64f2vI28fvcGh4kjqkCqs6CccyajHINwRnGGw7oFjA_WfNvNYfMlxdSsbSgYRxx4yUqzZtUfwLCFxaPJC0Plvde_qoqUfbI4TZNKptAKX0i8gD7K5DVr7b4c12r0c4i8foOMoAzB8ktXOkHJ7-WuijapQp3")'}}></div>
+                                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
+                                            <span className="material-symbols-outlined text-status-verified filled text-[16px]">check_circle</span>
+                                        </div>
+                                    </div>
+                                    <button className="text-text-secondary/40 hover:text-text-primary transition-colors">
+                                        <span className="material-symbols-outlined" style={{fontSize: '20px'}}>more_horiz</span>
+                                    </button>
+                                </div>
+                                <div className="flex flex-col gap-0.5 mt-1">
+                                    <h2 className="text-text-primary text-[15px] font-bold leading-tight truncate font-display">Sarah Jenkins</h2>
+                                    <p className="text-text-secondary text-[11px] uppercase tracking-wider font-semibold">Daughter</p>
+                                </div>
+                                <div className="mt-auto pt-3 border-t border-dashed border-gold-trim/20 flex justify-between items-center">
+                                    <span className="text-text-secondary text-xs">4 Assets</span>
+                                    <span className="material-symbols-outlined text-gold-trim/60 text-[16px]">mail</span>
+                                </div>
+                            </Link>
+
+                            {/* Michael */}
+                            <div className="group relative flex flex-col gap-3 rounded-lg bg-card-white p-4 shadow-card active:scale-[0.98] transition-all duration-200 cursor-pointer hover:shadow-soft border border-gold-trim/10 overflow-hidden">
+                                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gold-trim/60 via-gold-trim to-gold-trim/60"></div>
+                                <div className="flex justify-between items-start mt-1">
+                                    <div className="relative">
+                                        <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-12 shrink-0 border-2 border-white ring-1 ring-gold-trim/30 shadow-sm" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDC3oYwvdioT22bFscbn1_t5M7Rj_rKC_WViv-lUb6rQ2oXVnMd7N1Ar1uNNK-N3bqi2adimlEUQ5O0wmrqs_7kIPPSfT6F0qOoGf8MOSZSYxGRvTQg2KExdeU4i7Q6F-qBOYiwBkZ2nCeVOk7rRoyL14nCwfa1uGbwREp9eZ3i6KkPUAPqoPEzlaMLnG3iq-m1n3nbX6TX2ldKdULNt6wV5JX-dFwoD6cS6Wav099fqraDHVfWiEN0dz24eJM7LmIFQYUkwZJDF4jr")'}}></div>
+                                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
+                                            <span className="material-symbols-outlined text-status-pending filled text-[16px]">pending</span>
+                                        </div>
+                                    </div>
+                                    <button className="text-text-secondary/40 hover:text-text-primary transition-colors">
+                                        <span className="material-symbols-outlined" style={{fontSize: '20px'}}>more_horiz</span>
+                                    </button>
+                                </div>
+                                <div className="flex flex-col gap-0.5 mt-1">
+                                    <h2 className="text-text-primary text-[15px] font-bold leading-tight truncate font-display">Michael Chen</h2>
+                                    <p className="text-text-secondary text-[11px] uppercase tracking-wider font-semibold">Spouse</p>
+                                </div>
+                                <div className="mt-auto pt-3 border-t border-dashed border-gold-trim/20 flex justify-between items-center">
+                                    <span className="text-text-secondary text-xs">1 Asset</span>
+                                    <span className="material-symbols-outlined text-gold-trim/60 text-[16px]">mail</span>
+                                </div>
+                            </div>
+                            
+                            {/* Lawyer */}
+                             <div className="group relative flex flex-col gap-3 rounded-lg bg-card-white p-4 shadow-card active:scale-[0.98] transition-all duration-200 cursor-pointer hover:shadow-soft border border-gold-trim/10 overflow-hidden">
+                                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gold-trim/60 via-gold-trim to-gold-trim/60"></div>
+                                <div className="flex justify-between items-start mt-1">
+                                    <div className="relative">
+                                        <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-12 shrink-0 flex items-center justify-center bg-warm-gold/20 text-text-primary border-2 border-white ring-1 ring-gold-trim/30 shadow-sm">
+                                            <span className="material-symbols-outlined text-terracotta-dark">gavel</span>
+                                        </div>
+                                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
+                                            <span className="material-symbols-outlined text-status-verified filled text-[16px]">check_circle</span>
+                                        </div>
+                                    </div>
+                                    <button className="text-text-secondary/40 hover:text-text-primary transition-colors">
+                                        <span className="material-symbols-outlined" style={{fontSize: '20px'}}>more_horiz</span>
+                                    </button>
+                                </div>
+                                <div className="flex flex-col gap-0.5 mt-1">
+                                    <h2 className="text-text-primary text-[15px] font-bold leading-tight truncate font-display">Estate Lawyer</h2>
+                                    <p className="text-text-secondary text-[11px] uppercase tracking-wider font-semibold">Legal</p>
+                                </div>
+                                <div className="mt-auto pt-3 border-t border-dashed border-gold-trim/20 flex justify-between items-center">
+                                    <span className="text-text-secondary text-xs">All Docs</span>
+                                    <span className="material-symbols-outlined text-gold-trim/60 text-[16px]">folder_shared</span>
+                                </div>
+                            </div>
+
+                            {/* Empty */}
+                            <div className="group relative flex flex-col gap-3 rounded-lg border border-dashed border-gold-trim/40 bg-white/50 p-4 active:scale-[0.98] transition-all duration-200 cursor-pointer hover:border-gold-trim hover:bg-white">
+                                <div className="flex justify-center items-center h-full min-h-[100px] flex-col gap-2">
+                                    <div className="rounded-full w-10 h-10 shrink-0 flex items-center justify-center bg-cream-bg border border-gold-trim/20 text-gold-trim group-hover:scale-110 transition-transform">
+                                        <span className="material-symbols-outlined text-[20px]">mark_email_unread</span>
+                                    </div>
+                                    <div className="text-center">
+                                        <h2 className="text-text-secondary text-sm font-medium leading-tight">Empty Slot</h2>
+                                        <p className="text-terracotta text-[10px] font-bold uppercase tracking-wide mt-1">Draft New</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Upsell */}
+                         <div className="flex flex-col mb-8">
+                            <div className="relative flex flex-col items-center gap-4 rounded-xl border border-terracotta/20 bg-gradient-to-br from-terracotta/5 to-warm-gold/10 px-5 py-6 shadow-sm overflow-hidden">
+                                <div className="absolute -right-6 -top-6 w-24 h-24 bg-terracotta/10 rounded-full blur-xl"></div>
+                                <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-gold-trim/10 rounded-full blur-xl"></div>
+                                <div className="flex w-full items-center justify-between gap-4 relative z-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-terracotta border border-terracotta/10">
+                                            <span className="material-symbols-outlined filled">card_membership</span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <p className="text-text-primary text-lg font-bold leading-tight">Add 5 Seats</p>
+                                            <p className="text-terracotta-dark text-xs font-bold uppercase tracking-wide mt-0.5">50% Increase</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-text-secondary text-xs line-through">$9.99</p>
+                                        <p className="text-text-primary font-bold text-xl">$4.99</p>
+                                    </div>
+                                </div>
+                                <hr className="w-full border-t border-terracotta/10 relative z-10"/>
+                                <p className="text-text-secondary text-sm font-normal leading-normal text-center relative z-10 px-4">
+                                    Ensure your entire family is included in your Postscript.
+                                </p>
+                                <button className="relative z-10 flex w-full cursor-pointer items-center justify-center rounded-lg h-12 bg-terracotta hover:bg-terracotta-dark text-white text-sm font-bold tracking-wide transition-colors shadow-md shadow-terracotta/20">
+                                    Expand Postscript Capacity
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="fixed bottom-24 right-6 z-20">
+                        <button className="flex items-center justify-center w-14 h-14 rounded-full bg-text-primary hover:bg-text-secondary text-white shadow-xl shadow-text-primary/20 active:scale-95 transition-all duration-200 ring-2 ring-white">
+                            <span className="material-symbols-outlined" style={{fontSize: '28px'}}>post_add</span>
+                        </button>
+                    </div>
+                    <BottomNav />
+                </div>
+            );
+        }
+
+        // Screen 2: Welcome
+        const WelcomeScreen = () => (
+            <div className="relative flex min-h-screen w-full flex-col overflow-hidden bg-background-page text-text-main font-display">
+                <div className="absolute top-[-10%] right-[-15%] w-[80vw] h-[80vw] bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl -z-1 pointer-events-none opacity-60"></div>
+                <div className="absolute bottom-[-10%] left-[-15%] w-[60vw] h-[60vw] bg-gradient-to-tr from-primary/5 to-transparent rounded-full blur-2xl -z-1 pointer-events-none"></div>
+                
+                <div className="flex flex-col flex-grow w-full max-w-md mx-auto h-full p-6 pt-12 pb-8 justify-between relative z-10">
+                    <div className="flex flex-col items-center text-center mt-8 space-y-6">
+                        <div className="w-20 h-20 rounded-full border border-primary/20 bg-white flex items-center justify-center shadow-sm mb-2">
+                            <span className="text-4xl text-primary font-serif italic font-medium pt-1">P.S.</span>
+                        </div>
+                        <div className="space-y-4">
+                            <h1 className="text-5xl md:text-6xl font-medium tracking-tight text-text-main italic font-serif">
+                                Postscript
+                            </h1>
+                            <p className="text-lg md:text-xl text-text-muted font-normal leading-relaxed max-w-[280px] mx-auto">
+                                The final, secure footnote to your digital life.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-6 py-8">
+                        <div className="relative">
+                            <div className="absolute left-6 top-6 bottom-6 w-px bg-gradient-to-b from-primary/10 via-primary/30 to-primary/10"></div>
+                            <div className="flex flex-col gap-8">
+                                {[
+                                    { icon: "lock", title: "Local Encryption", sub: "Data locked on your device." },
+                                    { icon: "ecg_heart", title: "Secure Heartbeat", sub: "We verify your status often." },
+                                    { icon: "mark_email_read", title: "Trusted Delivery", sub: "Your legacy delivered safely." }
+                                ].map((step, i) => (
+                                    <div key={i} className="flex items-center gap-5 group">
+                                        <div className="relative z-10 flex-shrink-0 w-12 h-12 rounded-full bg-white border border-[#e6e1db] shadow-sm flex items-center justify-center text-primary group-hover:scale-105 transition-transform duration-300">
+                                            <span className="material-symbols-outlined text-[24px]">{step.icon}</span>
+                                        </div>
+                                        <div className="flex flex-col text-left">
+                                            <span className="text-sm font-bold text-primary tracking-wide uppercase">Step {i+1}</span>
+                                            <span className="text-lg font-medium text-text-main">{step.title}</span>
+                                            <span className="text-sm text-text-muted">{step.sub}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-4 mt-auto">
+                        <Link to="/dashboard" className="flex w-full cursor-pointer items-center justify-center rounded-lg h-14 px-8 bg-primary hover:bg-primary-dark active:scale-[0.98] transition-all text-white text-lg font-bold leading-normal tracking-wide shadow-lg shadow-primary/20">
+                            Get Started
+                        </Link>
+                        <button className="flex w-full cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-transparent text-text-muted hover:text-primary transition-colors text-sm font-semibold leading-normal">
+                            Already have an account? Log In
+                        </button>
+                    </div>
+                    <div className="text-center pt-4">
+                        <p className="text-[10px] text-text-muted/50 uppercase tracking-widest">Secured by Postscript Inc.</p>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // Screen 3: Billing
+        const BillingScreen = () => (
+             <div className="bg-background-page text-text-main font-sans overflow-x-hidden min-h-screen pb-24 antialiased">
+                <div className="sticky top-0 z-50 flex items-center bg-background-page/90 backdrop-blur-md px-5 py-4 justify-between border-b border-border-subtle/50">
+                    <div className="flex items-center gap-3">
+                        <Link to="/dashboard" className="p-1 -ml-1 text-text-muted hover:text-text-main transition-colors rounded-full hover:bg-black/5">
+                            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                        </Link>
+                        <span className="font-serif text-xl tracking-tight text-text-main font-semibold">Postscript</span>
+                    </div>
+                    <button className="text-primary-dark hover:text-primary transition-colors font-serif-text font-semibold italic text-lg">Restore</button>
+                </div>
+                
+                <div className="max-w-md mx-auto w-full px-5 pt-6 space-y-10">
+                    <section>
+                        <div className="flex items-end justify-between mb-3 px-1">
+                            <h1 className="text-3xl font-serif font-medium text-text-main">Plans & Billing</h1>
+                            <div className="flex flex-col items-end">
+                                <span className="text-xs uppercase tracking-widest text-text-muted mb-1">Status</span>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-800 border border-green-100 uppercase tracking-wide">Active</span>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 shadow-soft border border-border-subtle relative overflow-hidden">
+                            <div className="absolute -right-6 -top-6 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
+                            <div className="relative z-10 flex flex-col gap-4">
+                                <div>
+                                    <h3 className="font-serif text-2xl font-medium text-text-main">P.S. Legacy</h3>
+                                    <p className="text-text-muted font-serif-text text-lg italic mt-1">Next renewal: Oct 24, 2023</p>
+                                </div>
+                                <div className="border-t border-border-subtle/50 pt-4 flex justify-between items-center">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs uppercase tracking-widest text-text-muted mb-0.5">Payment Method</span>
+                                        <div className="flex items-center gap-2 text-sm text-text-main font-medium">
+                                            <span className="material-symbols-outlined text-[16px] text-primary-dark">credit_card</span>
+                                            •••• 4242
+                                        </div>
+                                    </div>
+                                    <button className="text-primary-dark hover:text-primary text-sm font-medium border border-border-subtle px-4 py-2 rounded-lg hover:bg-surface-subtle transition-all">
+                                        Manage
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                     <section>
+                        <h2 className="text-lg font-serif text-text-main mb-4 pl-1">Subscription Breakdown</h2>
+                        <div className="bg-white rounded-lg border border-border-subtle shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-surface-subtle border-b border-border-subtle">
+                                        <tr>
+                                            <th className="px-5 py-3 font-serif font-medium text-text-main tracking-wide">Service Item</th>
+                                            <th className="px-5 py-3 font-serif font-medium text-right text-text-main tracking-wide">Monthly</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border-subtle/40">
+                                        <tr>
+                                            <td className="px-5 py-4">
+                                                <div className="flex items-start gap-3">
+                                                    <span className="material-symbols-outlined text-primary-dark mt-0.5 text-[20px]">shield_lock</span>
+                                                    <div>
+                                                        <p className="font-medium text-text-main font-serif text-lg leading-tight">Secure Storage</p>
+                                                        <p className="text-sm text-text-muted font-serif-text italic mt-1">AES-256 encrypted vault</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-4 text-right font-serif text-lg text-text-main">$4.99</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-5 py-4">
+                                                <div className="flex items-start gap-3">
+                                                    <span className="material-symbols-outlined text-primary-dark mt-0.5 text-[20px]">monitor_heart</span>
+                                                    <div>
+                                                        <p className="font-medium text-text-main font-serif text-lg leading-tight">Heartbeat Service</p>
+                                                        <p className="text-sm text-text-muted font-serif-text italic mt-1">Daily life-check verification</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-4 text-right font-serif text-lg text-text-main">$5.00</td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot className="bg-surface-subtle border-t border-border-subtle">
+                                        <tr>
+                                            <td className="px-5 py-3 font-serif font-bold text-xl text-text-main">Total</td>
+                                            <td className="px-5 py-3 text-right font-serif font-bold text-xl text-text-main">$9.99</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <BottomNav />
+            </div>
+        );
+
+        // Screen 4: Security
+        const SecurityScreen = () => (
+            <div className="bg-background-page font-display min-h-screen flex flex-col overflow-x-hidden text-text-main">
+                <div className="sticky top-0 z-50 flex items-center bg-background-page/90 backdrop-blur-md p-4 pb-2 justify-between border-b border-border-subtle/50">
+                    <Link to="/dashboard" className="text-text-muted flex size-10 shrink-0 items-center justify-center cursor-pointer hover:bg-surface-subtle rounded-full transition-colors">
+                        <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                    </Link>
+                    <h2 className="text-text-main text-lg font-serif font-semibold leading-tight tracking-wide">Postscript Security</h2>
+                    <div className="size-10"></div>
+                </div>
+                
+                <div className="flex-1 flex flex-col max-w-lg mx-auto w-full pb-24">
+                     <div className="flex flex-col items-center justify-center pt-8 pb-10 px-6 relative overflow-hidden">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+                        <div className="relative mb-6">
+                            <div className="relative flex items-center justify-center size-32 text-primary drop-shadow-sm transition-transform duration-700 hover:scale-105">
+                                <span className="material-symbols-outlined" style={{fontSize: '84px', fontVariationSettings: "'FILL' 0, 'wght' 300"}}>shield</span>
+                                <span className="material-symbols-outlined absolute text-primary/80" style={{fontSize: '32px', fontVariationSettings: "'FILL' 1"}}>lock_person</span>
+                            </div>
+                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-white pl-2 pr-3 py-1 rounded-full shadow-md border border-border-subtle whitespace-nowrap">
+                                <span className="material-symbols-outlined text-green-600 text-[18px]">verified_user</span>
+                                <span className="text-xs font-bold tracking-wide text-text-muted uppercase">P.S. Secured</span>
+                            </div>
+                        </div>
+                        <div className="text-center space-y-2 z-10">
+                            <h1 className="text-3xl font-serif font-bold text-text-main">Your Legacy, Protected</h1>
+                            <p className="text-text-muted font-serif-text text-base max-w-xs mx-auto">Postscript uses military-grade AES-256 protocols to ensure your data outlasts time itself.</p>
+                        </div>
+                    </div>
+                    
+                    <div className="px-5 mb-8">
+                        <div className="rounded-2xl bg-white shadow-soft border border-border-subtle overflow-hidden relative group">
+                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-primary/30 via-primary to-primary/30"></div>
+                             <div className="p-6 relative z-10 flex flex-col gap-5">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="material-symbols-outlined text-primary text-sm">encrypted</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Zero Knowledge Proof</span>
+                                        </div>
+                                        <h3 className="text-2xl font-serif font-bold text-text-main">P.S. Private Key</h3>
+                                    </div>
+                                    <div className="size-10 rounded-full bg-surface-subtle border border-border-subtle flex items-center justify-center text-text-muted shadow-sm">
+                                        <span className="material-symbols-outlined">vpn_key</span>
+                                    </div>
+                                </div>
+                                <div className="bg-surface-subtle/80 backdrop-blur-sm rounded-xl border border-border-subtle p-4">
+                                    <div className="flex gap-3">
+                                        <span className="material-symbols-outlined text-text-muted shrink-0">info</span>
+                                        <p className="text-sm font-serif-text text-text-muted leading-relaxed italic">
+                                            "We do not know your Private Key. It is never sent to our servers. If lost, your digital legacy cannot be recovered."
+                                        </p>
+                                    </div>
+                                </div>
+                                <button className="w-full bg-white hover:bg-surface-subtle border border-border-subtle text-text-main font-semibold py-3.5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">password</span>
+                                    <span className="font-display tracking-wide z-10">Change Private Key</span>
+                                </button>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                <BottomNav />
+            </div>
+        );
+
+        // Screen 5: Heartbeat
+        const HeartbeatScreen = () => (
+             <div className="bg-background-page font-display min-h-screen">
+                <BackHeader title="Heartbeat Settings" />
+                <div className="flex flex-col items-center justify-center pt-8 pb-6 px-4">
+                    <div className="relative flex items-center justify-center size-48">
+                        <div className="absolute inset-0 rounded-full bg-primary/10 scale-100"></div>
+                        <div className="absolute inset-4 rounded-full bg-primary/20 scale-90"></div>
+                        <div className="absolute inset-8 rounded-full bg-primary/40 scale-75"></div>
+                        <div className="relative flex items-center justify-center size-20 rounded-full bg-primary shadow-lg shadow-primary/30 z-10">
+                            <span className="material-symbols-outlined text-background-page filled" style={{fontSize: '40px'}}>monitor_heart</span>
+                        </div>
+                    </div>
+                    <p className="text-text-muted text-sm font-medium mt-4 text-center max-w-[280px]">
+                        Your Heartbeat is active. We'll check for a pulse based on the schedule below.
+                    </p>
+                </div>
+                
+                 <div className="flex flex-col px-4 pt-2">
+                    <h3 className="text-text-main text-lg font-bold leading-tight tracking-[-0.015em] pb-3">Check-in Frequency</h3>
+                    <div className="flex w-full">
+                        <div className="flex h-12 flex-1 items-center justify-center rounded-xl bg-surface-subtle p-1 border border-border-subtle">
+                             {['Weekly', 'Monthly', 'Quarterly'].map((t,i) => (
+                                <label key={t} className={`flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 text-sm font-bold transition-all ${i===1 ? 'bg-white shadow-sm text-text-main' : 'text-text-muted'}`}>
+                                    <span className="truncate">{t}</span>
+                                    <input className="invisible w-0 absolute" name="frequency" type="radio" defaultChecked={i===1} />
+                                </label>
+                             ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col px-4 mt-6">
+                    <h3 className="text-text-main text-lg font-bold leading-tight tracking-[-0.015em] pb-3">Grace Period</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                         {[3, 7, 14].map((d, i) => (
+                            <label key={d} className="cursor-pointer relative">
+                                <input className="peer sr-only" name="grace_period" type="radio" defaultChecked={i===1} />
+                                <div className="flex flex-col items-center justify-center rounded-xl border-2 border-border-subtle bg-white p-3 text-center transition-all peer-checked:border-primary peer-checked:bg-primary/5">
+                                    <span className="text-lg font-bold text-text-main">{d}</span>
+                                    <span className="text-xs font-medium text-text-muted">Days</span>
+                                </div>
+                            </label>
+                         ))}
+                    </div>
+                </div>
+                
+                 <div className="mt-auto flex flex-col gap-3 p-4 bg-background-page pb-8">
+                    <Link to="/dashboard" className="flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3.5 text-base font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-dark transition-colors">
+                        Save Configuration
+                    </Link>
+                </div>
+            </div>
+        );
+
+        // Screen 6: Preview Mode
+        const PreviewScreen = () => (
+             <div className="bg-background-page font-display text-text-main antialiased min-h-screen pb-32">
+                <div className="fixed top-0 left-0 right-0 z-50 bg-background-page/90 backdrop-blur-md border-b border-border-subtle">
+                    <div className="flex items-center p-4 pb-2 justify-between max-w-lg mx-auto w-full">
+                        <h2 className="text-text-main text-lg font-bold leading-tight flex-1 text-center pl-12">Preview Mode</h2>
+                        <div className="flex w-12 items-center justify-end">
+                            <Link to="/compose" className="flex size-10 items-center justify-center rounded-full hover:bg-surface-subtle transition-colors text-text-main">
+                                <span className="material-symbols-outlined text-2xl">close</span>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+                
+                 <div className="relative flex w-full flex-col pt-20 max-w-lg mx-auto px-4">
+                    <div className="bg-white shadow-xl rounded-2xl overflow-hidden relative border border-border-subtle">
+                        <div className="absolute inset-0 bg-parchment-texture pointer-events-none opacity-60 mix-blend-multiply"></div>
+                        <div className="relative z-10 p-6 flex flex-col gap-6">
+                            <div className="flex flex-col items-center border-b border-primary/20 pb-6">
+                                <div className="bg-center bg-no-repeat bg-cover rounded-full h-20 w-20 mb-4 shadow-md ring-4 ring-background-page" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAQ6mTaD1XhRre-PCAAwhgqEZnORyD1iAtkdzzSjBLT5NTGjAG3QfBBFPJP3Evt0x1GHJp6hw4vBA6j3Xc3YkliNu3BBedDuWkGJlZn5sKnfV8WvphbGr4OBAjjGVGkDXZmHm9qYkUcfj7OchEr3yiZ4P20qzowAJ4AxVhLIozkkJaDYjZmPWuX1oK1jTXR6GhGEvqDj_xZDgq8C31WYbxDJxm0i3tB9fVhhcRjoCMDrbQKFxtIEkm-7bv-z-jjRiG08eT2NhnwiWhh")'}}></div>
+                                <div className="flex flex-col items-center text-center">
+                                    <p className="text-text-main text-xl font-bold leading-tight">Eleanor Rigby</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="material-symbols-outlined text-primary text-sm">verified_user</span>
+                                        <p className="text-text-muted text-sm font-medium">Verified Legacy Delivery</p>
+                                    </div>
+                                    <p className="text-text-muted text-xs mt-1 opacity-70">July 24, 2024</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-col gap-4">
+                                <h2 className="font-serif text-text-main text-[28px] font-medium leading-tight text-left">Dearest Sarah,</h2>
+                                <div className="font-serif text-text-main/90 text-lg font-normal leading-relaxed">
+                                    <p>If you are reading this, it means the time has come for us to say our final goodbyes. I have arranged this letter to reach you when I can no longer be there in person.</p>
+                                    <br/>
+                                    <p>Please know that you were the light of my life. I've left a few things here for you—memories we shared and some important documents you'll need for the next steps. Be brave, my love.</p>
+                                </div>
+                                <div className="font-serif text-text-main text-lg font-medium pt-4">
+                                    Love always,<br/>
+                                    Mom
+                                </div>
+                            </div>
+                            
+                            <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent my-2"></div>
+                            
+                            <div className="flex flex-col gap-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">folder_open</span>
+                                    <h3 className="text-text-main text-lg font-bold leading-tight">Included Assets</h3>
+                                </div>
+                                 <div className="flex items-center justify-between p-3 rounded-lg bg-surface-subtle border border-border-subtle">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                            <span className="material-symbols-outlined text-xl">description</span>
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <p className="text-sm font-bold text-text-main truncate">The Family Trust.pdf</p>
+                                            <p className="text-xs text-text-muted">2.4 MB • Encrypted</p>
+                                        </div>
+                                    </div>
+                                    <button className="flex-shrink-0 px-4 py-2 bg-white border border-border-subtle rounded-lg text-xs font-bold text-text-muted cursor-not-allowed flex items-center gap-1 shadow-sm">
+                                        <span className="material-symbols-outlined text-sm">lock</span>
+                                        <span>Decrypt</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border-subtle p-4 pb-8 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                    <div className="max-w-lg mx-auto flex gap-3">
+                        <Link to="/compose" className="flex-1 flex items-center justify-center h-12 rounded-xl border border-border-subtle bg-transparent text-text-main font-bold text-base hover:bg-surface-subtle transition-colors">
+                            Edit Content
+                        </Link>
+                        <Link to="/dashboard" className="flex-1 flex items-center justify-center h-12 rounded-xl bg-primary text-white font-bold text-base shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors gap-2">
+                            <span className="material-symbols-outlined text-xl">check_circle</span>
+                            Looks Good
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // Screen 7: Dashboard (Home)
+        const DashboardScreen = () => (
+             <div className="bg-background-page text-text-main font-display antialiased overflow-x-hidden pb-28">
+                <header className="sticky top-0 z-50 bg-background-page/90 backdrop-blur-md border-b border-border-subtle transition-all duration-300">
+                    <div className="flex items-center justify-between px-6 py-4 relative">
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                            <span className="font-serif text-3xl font-bold italic text-primary/20 tracking-wider">P.S.</span>
+                        </div>
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div className="relative">
+                                <div className="bg-center bg-no-repeat bg-cover rounded-full size-11 shadow-sm ring-2 ring-white" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDZBjzoz_ZVRsPOlRrie1bxRaqgKygNY48ovOoBuxbLJQtw2BDY_rczVAITjLIivsCjDOa9F318lnW9Qx8kMrlusyClhIbQXap7ZK159IYV_QAMz2YhIDVa59R44VHBCysM8-Sy8-uePOwTqBNSdBy4eZRLx297WoDAboQAzBMWY3Uu-wy6ic-X0g3hEkH2-X3jnaAf7NBVyLQkJktBWPhCBh5TkNCkYP-NV0CUcOJhvrGgAfRDp0u6A6GuOQG3rfm6uwkUVBw8xNXi")'}}></div>
+                                <div className="absolute bottom-0 right-0 size-3 bg-accent-sage rounded-full border-2 border-background-page"></div>
+                            </div>
+                            <div className="flex flex-col">
+                                <h2 className="text-text-main text-2xl font-serif font-bold leading-none tracking-tight">Postscript.</h2>
+                                <p className="text-text-muted font-medium text-[11px] mt-1">Good Morning, Alex</p>
+                            </div>
+                        </div>
+                        <button className="relative z-10 flex items-center justify-center size-10 rounded-full text-text-muted hover:bg-surface-subtle hover:text-text-main transition-colors">
+                            <span className="material-symbols-outlined filled" style={{fontSize: '24px'}}>notifications</span>
+                        </button>
+                    </div>
+                </header>
+                
+                 <main className="flex flex-col gap-6 px-5 pt-6">
+                    {/* Status Card */}
+                    <Link to="/security" className="bg-surface-card rounded-2xl p-0 overflow-hidden shadow-soft border border-border-subtle relative group block">
+                        <div className="flex items-center justify-between p-6 pb-4 relative z-10">
+                            <div className="flex flex-col gap-1.5">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="material-symbols-outlined text-accent-sage filled" style={{fontSize: '22px'}}>verified_user</span>
+                                    <p className="text-text-main text-xl font-serif font-bold leading-tight">Vault Secured</p>
+                                </div>
+                                <p className="text-text-muted text-sm font-normal pl-8">Encryption verified locally</p>
+                            </div>
+                            <div className="text-text-muted hover:text-primary transition-colors bg-surface-subtle rounded-full p-2">
+                                <span className="material-symbols-outlined" style={{fontSize: '20px'}}>info</span>
+                            </div>
+                        </div>
+                        <div className="w-full h-28 relative mt-0 bg-gradient-to-r from-surface-subtle to-white">
+                            <div className="absolute inset-0 bg-center bg-cover opacity-20 mix-blend-luminosity" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAbC9nxITHaqY2WQl86TIW0cUE41pZborbA9AaoVHsiTs00gd6uB9Kcao0Z5yu9_HvmbH_tQK_HBilCYSJmDCpvwknP5ziCxP88d3DCqFUjUqbV2Xa4_51YTovsWYuxUw8Xl2Ele0F45tROV3z4FRZ-D-NSFGm58STGMfGT2REDADfTfzaQBBA0AMmrL1qt4U3qZ3-E6vnYJITotZ8CGy9U73dPXS7Zxav8vDEdc_FMqNOdGJBbME0PSLgZGAniR1iPfjGISeKlP9l1")'}}></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-surface-card via-transparent to-transparent"></div>
+                            <div className="absolute bottom-4 left-6 flex items-center gap-2.5 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-border-subtle/50">
+                                <span className="flex size-2 relative">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-sage opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full size-2 bg-accent-sage"></span>
+                                </span>
+                                <span className="text-accent-sage text-[10px] font-bold tracking-widest uppercase">Active Monitoring</span>
+                            </div>
+                        </div>
+                    </Link>
+
+                    {/* Heartbeat Card */}
+                     <div className="flex flex-col bg-surface-card rounded-2xl shadow-soft border border-border-subtle overflow-hidden relative">
+                        <div className="h-1 w-full bg-gradient-to-r from-accent-terracotta/40 via-accent-terracotta to-accent-terracotta/40"></div>
+                        <div className="flex flex-col p-6 gap-6 relative z-10">
+                            <div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-text-main text-xl font-serif font-bold leading-tight">Heartbeat Active</p>
+                                    </div>
+                                    <span className="px-2.5 py-1 rounded-md bg-accent-terracotta-bg border border-accent-terracotta/20 text-accent-terracotta text-[10px] font-bold uppercase tracking-wider">Monitor Active</span>
+                                </div>
+                                <div className="flex items-start gap-4">
+                                    <div className="relative size-16 shrink-0 rounded-full border-4 border-surface-subtle flex items-center justify-center">
+                                        <svg className="absolute inset-0 -rotate-90 text-accent-terracotta" viewBox="0 0 36 36">
+                                            <path className="stroke-current" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeDasharray="75, 100" strokeWidth="3"></path>
+                                        </svg>
+                                        <span className="text-xs font-bold text-text-main">29d</span>
+                                    </div>
+                                    <p className="text-text-muted text-sm leading-relaxed pt-1">
+                                        Your heartbeat monitor is active. Confirm your status to reset the timer.
+                                        <br/><span className="text-[11px] text-text-muted/70 mt-1 block">Next check required by June 14th</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <Link to="/heartbeat" className="flex w-full items-center justify-center rounded-xl h-12 px-4 bg-primary text-white hover:bg-primary-dark shadow-md shadow-primary/20 transition-all active:scale-[0.98]">
+                                <span className="material-symbols-outlined mr-2 text-[20px]">ecg_heart</span>
+                                <span className="text-sm font-bold tracking-wide">Confirm Heartbeat</span>
+                            </Link>
+                        </div>
+                    </div>
+                    
+                    {/* Vault Grid */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4 px-1">
+                            <h3 className="text-text-main text-xl font-serif font-bold leading-tight">My Vault</h3>
+                            <button className="text-primary text-sm font-medium hover:text-primary-dark transition-colors">View All</button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Link to="/add-crypto" className="group flex flex-col justify-between rounded-2xl bg-surface-card border border-border-subtle p-5 hover:border-primary/30 hover:shadow-card transition-all cursor-pointer h-40">
+                                <div className="flex justify-between items-start">
+                                    <div className="rounded-xl bg-primary-light p-2.5 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                        <span className="material-symbols-outlined filled">token</span>
+                                    </div>
+                                    <span className="text-[10px] text-text-muted font-bold bg-surface-subtle px-2 py-1 rounded-full border border-border-subtle/50">3</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-text-main text-base font-bold mb-0.5">Crypto & Keys</h2>
+                                    <p className="text-text-muted text-xs">Wallet Recovery Phrases</p>
+                                </div>
+                            </Link>
+                            <Link to="/add-transfer" className="group flex flex-col justify-between rounded-2xl bg-surface-card border border-border-subtle p-5 hover:border-primary/30 hover:shadow-card transition-all cursor-pointer h-40">
+                                <div className="flex justify-between items-start">
+                                    <div className="rounded-xl bg-accent-terracotta-bg p-2.5 text-accent-terracotta group-hover:bg-accent-terracotta group-hover:text-white transition-all duration-300">
+                                        <span className="material-symbols-outlined filled">switch_account</span>
+                                    </div>
+                                    <span className="text-[10px] text-text-muted font-bold bg-surface-subtle px-2 py-1 rounded-full border border-border-subtle/50">8</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-text-main text-base font-bold mb-0.5">Account Transfer</h2>
+                                    <p className="text-text-muted text-xs">Social & Service Handoff</p>
+                                </div>
+                            </Link>
+                             <Link to="/compose" className="group flex flex-col justify-center rounded-2xl bg-surface-card border border-border-subtle p-5 hover:border-primary/30 hover:shadow-card transition-all cursor-pointer col-span-2">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-4">
+                                        <div className="rounded-xl bg-accent-sage-bg p-2.5 text-accent-sage group-hover:bg-accent-sage group-hover:text-white transition-all duration-300">
+                                            <span className="material-symbols-outlined filled">history_edu</span>
+                                        </div>
+                                        <div>
+                                            <h2 className="text-text-main text-base font-bold">Final Messages</h2>
+                                            <p className="text-text-muted text-xs mt-0.5">Secure letters & notes for heirs</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-text-muted font-medium bg-surface-subtle px-2.5 py-1 rounded-full">2 Items</span>
+                                </div>
+                            </Link>
+                        </div>
+                    </div>
+                 </main>
+                 
+                  <div className="fixed bottom-24 right-5 z-40">
+                    <Link to="/compose" className="flex size-14 items-center justify-center rounded-full bg-text-main text-white shadow-lg shadow-black/10 hover:scale-105 active:scale-95 transition-all">
+                        <span className="material-symbols-outlined filled" style={{fontSize: '24px'}}>add_moderator</span>
+                    </Link>
+                </div>
+                <BottomNav />
+            </div>
+        );
+
+        // Screen 8: Add Crypto
+        const AddCryptoScreen = () => (
+             <div className="bg-background-page text-text-main font-display antialiased overflow-x-hidden pb-32">
+                <BackHeader title="Add to Vault" />
+                <main className="flex flex-col gap-6 px-6 pt-6">
+                    <div>
+                        <h1 className="text-3xl font-serif font-bold text-text-main mb-2">Crypto & Keys</h1>
+                        <p className="text-text-muted text-sm leading-relaxed">Securely store recovery phrases, private keys, and hardware wallet locations.</p>
+                    </div>
+                    <div className="bg-primary-light/40 border border-primary/20 rounded-xl p-4 flex gap-3 items-start shadow-sm">
+                        <div className="bg-primary/10 rounded-full p-1 shrink-0 mt-0.5">
+                            <span className="material-symbols-outlined text-primary filled" style={{fontSize: '18px'}}>encrypted</span>
+                        </div>
+                        <p className="text-xs text-text-main font-medium leading-relaxed">
+                            <span className="font-bold text-primary-dark block mb-0.5">Zero-Knowledge Encryption</span>
+                            Data is encrypted locally with your master password before storage. Postscript employees cannot access your keys.
+                        </p>
+                    </div>
+                    <form className="flex flex-col gap-6 mt-2">
+                        <div className="group">
+                            <label className="block text-[11px] font-bold uppercase tracking-widest text-text-muted mb-2 ml-1">Asset Name</label>
+                            <input className="w-full h-14 rounded-xl bg-surface-card border-border-subtle text-text-main placeholder:text-text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary shadow-sm transition-all text-base px-4 font-medium" placeholder="e.g. Ledger Nano X Backup" type="text"/>
+                        </div>
+                        <div className="group">
+                            <label className="block text-[11px] font-bold uppercase tracking-widest text-text-muted mb-2 ml-1">Wallet Type</label>
+                            <div className="relative">
+                                <select className="w-full h-14 appearance-none rounded-xl bg-surface-card border-border-subtle text-text-main focus:border-primary focus:ring-1 focus:ring-primary shadow-sm transition-all text-base px-4 font-medium pr-10">
+                                    <option disabled selected value="">Select wallet type...</option>
+                                    <option value="hardware">Hardware Wallet (Cold Storage)</option>
+                                    <option value="software">Software Wallet (Hot Wallet)</option>
+                                    <option value="exchange">Exchange Account</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-muted">
+                                    <span className="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="group">
+                            <div className="flex justify-between items-end mb-2 ml-1">
+                                <label className="block text-[11px] font-bold uppercase tracking-widest text-text-muted">Seed Phrase / Private Key</label>
+                                <button className="text-primary hover:text-primary-dark text-xs font-bold flex items-center gap-1 bg-primary-light/50 px-2 py-1 rounded-lg transition-colors" type="button">
+                                    <span className="material-symbols-outlined" style={{fontSize: '16px'}}>qr_code_scanner</span> Scan
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <textarea className="w-full rounded-xl bg-surface-card border-border-subtle text-text-main placeholder:text-text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-base p-4 font-mono leading-relaxed resize-none" placeholder="Enter your 12 or 24 word recovery phrase here..." rows="6"></textarea>
+                            </div>
+                            <p className="text-[10px] text-text-muted mt-2 text-right px-1">Words detected: <span className="font-bold text-primary">0</span></p>
+                        </div>
+                    </form>
+                </main>
+                 <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-border-subtle p-5 px-6 pb-8 z-50">
+                    <Link to="/dashboard" className="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold text-base tracking-wide shadow-glow active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                        <span className="material-symbols-outlined">lock</span>
+                        Encrypt & Save to Vault
+                    </Link>
+                </div>
+            </div>
+        );
+
+        // Screen 9: Add Transfer
+        const AddTransferScreen = () => (
+             <div className="bg-background-page text-text-main font-display antialiased overflow-x-hidden pb-32">
+                <div className="sticky top-0 z-50 bg-background-page/95 backdrop-blur-md border-b border-border-subtle transition-all duration-300">
+                    <div className="flex items-center justify-between px-4 py-4 relative">
+                        <Link to="/dashboard" className="flex items-center justify-center size-10 rounded-full text-text-main hover:bg-surface-subtle transition-colors -ml-2">
+                            <span className="material-symbols-outlined" style={{fontSize: '24px'}}>arrow_back</span>
+                        </Link>
+                        <h2 className="text-text-main text-lg font-serif font-bold tracking-tight absolute left-1/2 -translate-x-1/2">Transfer Instructions</h2>
+                        <Link to="/dashboard" className="text-primary font-medium text-sm px-2 hover:text-primary-dark transition-colors">Cancel</Link>
+                    </div>
+                </div>
+                
+                <main className="flex flex-col gap-6 px-5 pt-6">
+                    <div className="flex flex-col gap-2">
+                        <h1 className="text-3xl font-serif font-bold text-text-main leading-tight">Account Transfer</h1>
+                        <p className="text-text-muted text-sm leading-relaxed">Detail how this digital asset should be transferred or memorialized by your legacy contact.</p>
+                    </div>
+                    <form className="flex flex-col gap-5">
+                        <div className="bg-surface-card rounded-2xl p-5 shadow-soft border border-border-subtle flex flex-col gap-5">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="material-symbols-outlined text-primary" style={{fontSize: '20px'}}>token</span>
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">Asset Details</h3>
+                            </div>
+                            <div className="grid gap-4">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-semibold text-text-main ml-1">Platform Name</label>
+                                    <div className="relative group">
+                                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors">public</span>
+                                        <input className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-subtle border-border-subtle text-base placeholder:text-text-muted/60 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary" placeholder="e.g. GitHub, Gmail" type="text"/>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-semibold text-text-main ml-1">Current Handle / ID</label>
+                                    <div className="relative group">
+                                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors">alternate_email</span>
+                                        <input className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-subtle border-border-subtle text-base placeholder:text-text-muted/60 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary" placeholder="e.g. @alex_dev" type="text"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                         <div className="bg-surface-card rounded-2xl p-5 shadow-soft border border-border-subtle flex flex-col gap-3 h-full">
+                            <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-accent-sage" style={{fontSize: '20px'}}>history_edu</span>
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted">Succession Instructions</h3>
+                                </div>
+                            </div>
+                            <textarea className="w-full p-0 bg-transparent border-0 text-text-main placeholder:text-text-muted/50 focus:ring-0 text-base leading-relaxed font-display resize-none" placeholder="Describe how to access, transfer, or memorialize this account..." rows="6"></textarea>
+                        </div>
+                    </form>
+                </main>
+                 <div className="fixed bottom-0 left-0 right-0 z-50 p-5 bg-gradient-to-t from-background-page via-background-page to-transparent pb-8">
+                    <Link to="/dashboard" className="w-full flex items-center justify-center gap-2 rounded-xl h-14 bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/30 transition-all active:scale-[0.98]">
+                        <span className="material-symbols-outlined">lock_clock</span>
+                        <span className="text-base font-bold tracking-wide">Secure Instructions</span>
+                    </Link>
+                </div>
+            </div>
+        );
+
+        // Screen 10: Compose
+        const ComposeScreen = () => (
+             <div className="bg-background-page text-text-main font-display antialiased overflow-x-hidden pb-32">
+                <div className="sticky top-0 z-50 bg-background-page/95 backdrop-blur-md border-b border-border-subtle transition-all duration-300">
+                    <div className="flex items-center justify-between px-4 py-3 relative">
+                        <Link to="/dashboard" className="flex items-center text-text-muted hover:text-text-main transition-colors p-2 -ml-2 rounded-full active:bg-surface-subtle">
+                            <span className="material-symbols-outlined" style={{fontSize: '20px'}}>arrow_back_ios_new</span>
+                            <span className="text-base font-medium ml-1">Vault</span>
+                        </Link>
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 text-center">
+                            <h1 className="text-text-main text-lg font-serif font-bold tracking-tight">Compose Message</h1>
+                        </div>
+                        <button className="text-primary hover:text-primary-dark font-bold text-sm px-2 py-1 rounded-md transition-colors">Drafts</button>
+                    </div>
+                </div>
+                
+                <main className="flex flex-col gap-6 px-5 pt-6 max-w-lg mx-auto">
+                    <div className="flex items-start gap-4 p-4 bg-surface-subtle/60 rounded-xl border border-border-subtle/50">
+                        <div className="bg-primary/10 p-2 rounded-full text-primary shrink-0">
+                            <span className="material-symbols-outlined filled">history_edu</span>
+                        </div>
+                        <div>
+                            <p className="text-sm text-text-main font-medium leading-snug">Legacy Letter</p>
+                            <p className="text-xs text-text-muted mt-1 leading-relaxed">This message will be encrypted and only released to the chosen recipient upon confirmation of your passing.</p>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-surface-card rounded-xl shadow-soft border border-border-subtle relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/30 via-primary to-primary/30"></div>
+                        <div className="p-6 pb-8 flex flex-col gap-6">
+                            <div className="relative z-10 group/input">
+                                <label className="block font-serif text-text-muted italic text-sm mb-2 pl-1">To my beneficiary</label>
+                                <div className="relative">
+                                    <select className="w-full appearance-none bg-surface-subtle border border-border-subtle rounded-xl py-3.5 pl-11 pr-10 text-text-main font-display font-medium text-base shadow-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all cursor-pointer">
+                                        <option disabled selected value="">Select a Recipient...</option>
+                                        <option value="1">Sarah (Daughter)</option>
+                                        <option value="2">James (Son)</option>
+                                    </select>
+                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary pointer-events-none">
+                                        <span className="material-symbols-outlined filled" style={{fontSize: '20px'}}>account_circle</span>
+                                    </div>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
+                                        <span className="material-symbols-outlined">expand_more</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="group/input">
+                                <label className="block font-serif text-text-muted italic text-sm mb-1 pl-1">Subject</label>
+                                <input className="w-full bg-transparent border-0 border-b border-border-subtle px-1 py-2 text-text-main font-serif text-xl placeholder:text-text-muted/40 placeholder:font-serif focus:border-primary focus:ring-0 transition-colors" placeholder="e.g. My deepest love" type="text"/>
+                            </div>
+                            
+                            <div className="relative">
+                                <div className="absolute -left-6 -right-6 top-0 h-px bg-border-subtle"></div>
+                                <textarea className="lined-paper w-full min-h-[320px] bg-transparent border-0 p-0 pt-[0.4rem] mt-6 text-text-main font-serif text-lg resize-none focus:ring-0 placeholder:text-text-muted/30 placeholder:italic" placeholder="My dearest, I am writing this to share..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                
+                 <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-border-subtle pb-safe pt-4 px-5 shadow-[0_-5px_20px_rgba(0,0,0,0.02)]">
+                    <div className="flex flex-col gap-3 pb-4 max-w-lg mx-auto">
+                        <Link to="/preview" className="w-full relative overflow-hidden bg-primary text-white font-display font-bold text-base h-14 rounded-xl shadow-glow hover:bg-primary-dark transition-all active:scale-[0.98] flex items-center justify-center gap-3 group">
+                            <span className="material-symbols-outlined filled">verified_user</span>
+                            Seal & Save to Vault
+                        </Link>
+                        <button className="text-xs text-text-muted font-medium hover:text-text-main transition-colors py-1">Save as Draft</button>
+                    </div>
+                </div>
+            </div>
+        );
+
+
+        // --- App Component ---
+
+        const App = () => {
+            return (
+                <MemoryRouter>
+                    <Routes>
+                        <Route path="/" element={<WelcomeScreen />} />
+                        <Route path="/dashboard" element={<DashboardScreen />} />
+                        <Route path="/recipients" element={<RecipientsScreen />} />
+                        <Route path="/billing" element={<BillingScreen />} />
+                        <Route path="/security" element={<SecurityScreen />} />
+                        <Route path="/heartbeat" element={<HeartbeatScreen />} />
+                        <Route path="/preview" element={<PreviewScreen />} />
+                        <Route path="/add-crypto" element={<AddCryptoScreen />} />
+                        <Route path="/add-transfer" element={<AddTransferScreen />} />
+                        <Route path="/compose" element={<ComposeScreen />} />
+                    </Routes>
+                </MemoryRouter>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

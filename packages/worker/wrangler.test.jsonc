@@ -1,0 +1,30 @@
+/**
+ * 测试专用 wrangler 配置
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "postscript-api-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-27",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "postscript-db-test",
+      "database_id": "TEST_DB_ID"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "TEST_KV_ID"
+    }
+  ],
+  "vars": {
+    "JWT_SECRET": "test-jwt-secret-for-testing-only",
+    "HSM_SECRET_PART": "test-hsm-secret-part",
+    "APPLE_CLIENT_ID": "test.apple.client.id",
+    "APPLE_TEAM_ID": "TEST_TEAM",
+    "APPLE_KEY_ID": "TEST_KEY",
+    "APPLE_PRIVATE_KEY": "test-private-key"
+  }
+}
