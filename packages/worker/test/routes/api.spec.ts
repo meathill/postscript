@@ -98,7 +98,7 @@ describe('API Integration Tests', () => {
       expect(response.status).toBe(401);
     });
 
-    it('POST /api/assets 缺少必填字段应该返回 400', async () => {
+    it('POST /api/assets 缺少 HSM 头应该返回 400', async () => {
       const token = await generateTestToken();
 
       // 先创建测试用户
@@ -110,7 +110,7 @@ describe('API Integration Tests', () => {
         '/api/assets',
         {
           method: 'POST',
-          body: JSON.stringify({ type: 'crypto' }), // 缺少 name 和 encryptedData
+          body: JSON.stringify({ type: 'crypto', name: 'Test', encryptedData: 'abc' }),
         },
         token,
       );
@@ -118,7 +118,7 @@ describe('API Integration Tests', () => {
 
       expect(response.status).toBe(400);
       const body = (await response.json()) as ApiResponse;
-      expect(body.error).toContain('required fields');
+      expect(body.error).toContain('X-HSM-Secret');
     });
   });
 
