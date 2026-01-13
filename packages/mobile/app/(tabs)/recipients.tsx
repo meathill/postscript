@@ -7,9 +7,10 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function RecipientsScreen() {
   const router = useRouter();
-  const { recipients, isLoading, fetchRecipients, deleteRecipient } = useRecipientsStore();
+  const { recipients, isLoading, fetchRecipients, deleteRecipient, loadFromCache } = useRecipientsStore();
 
   useEffect(() => {
+    loadFromCache();
     fetchRecipients();
   }, []);
 
