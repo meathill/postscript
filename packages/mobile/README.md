@@ -1,50 +1,43 @@
-# Welcome to your Expo app 👋
+# Postscript Mobile App
+Inheritance System for Digital Assets.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Development Setup
 
-## Get started
+### Preseuqisites
+- Node.js > 20
+- pnpm
+- XCode / Android Studio (for simulators)
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+### Installation
 ```bash
-npm run reset-project
+cd packages/mobile
+pnpm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Running Tests
+```bash
+pnpm test
+```
+*Note: Test environment for Expo might require specific Node configuration.*
 
-## Learn more
+### Running App
+```bash
+pnpm start
+pnpm ios
+pnpm android
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Architecture
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### State Management
+- **Zustand**: Stores located in `store/`.
+- **Offline Cache**: `lib/db.ts` using `expo-sqlite`.
 
-## Join the community
+### Security
+- **Crypto**: `lib/crypto.ts` handles client-side encryption (PBKDF2 + AES-GCM).
+- **Storage**: `expo-secure-store` for tokens and keys.
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### UI
+- **Styling**: NativeWind (Tailwind CSS).
+- **Icons**: Lucide React Native.
+- **Navigation**: Expo Router (File-based routing).
