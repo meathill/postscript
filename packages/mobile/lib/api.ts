@@ -39,8 +39,24 @@ export const api = {
         body: JSON.stringify({ identityToken }),
       });
     },
-    getMe: async () => {
+    async getMe() {
       return fetchApi<{ user: any }>('/api/auth/me');
+    },
+  },
+  recipients: {
+    async list() {
+      return fetchApi<any[]>('/api/recipients');
+    },
+    async create(data: { name: string; email: string; relationship?: string }) {
+      return fetchApi<any>('/api/recipients', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+    async delete(id: string) {
+      return fetchApi<{ success: boolean }>(`/api/recipients/${id}`, {
+        method: 'DELETE',
+      });
     },
   },
 };
